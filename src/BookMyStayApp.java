@@ -51,8 +51,16 @@ public class BookMyStayApp {
 
         System.out.println("Suite Room:");
         suite.displayRoomDetails();
-        System.out.println("Available Rooms: " + availability.get("Suite"));
+        System.out.println("Available Rooms: " + availability.get("Suite") + "\n");
         // ===================== UC3 END =======================
+
+
+        // ===================== UC4 START =====================
+        RoomSearchService searchService = new RoomSearchService();
+
+        System.out.println("Room Search\n");
+        searchService.searchAvailableRooms(inventory, single, dbl, suite);
+        // ===================== UC4 END =======================
     }
 }
 
@@ -118,5 +126,37 @@ class RoomInventory {
 
     public void updateAvailability(String roomType, int count) {
         roomAvailability.put(roomType, count);
+    }
+}
+
+
+// ===================== UC4 CLASS =====================
+
+class RoomSearchService {
+    public void searchAvailableRooms(
+            RoomInventory inventory,
+            Room singleRoom,
+            Room doubleRoom,
+            Room suiteRoom) {
+
+        Map<String, Integer> availability = inventory.getRoomAvailability();
+
+        if (availability.get("Single") > 0) {
+            System.out.println("Single Room:");
+            singleRoom.displayRoomDetails();
+            System.out.println("Available: " + availability.get("Single") + "\n");
+        }
+
+        if (availability.get("Double") > 0) {
+            System.out.println("Double Room:");
+            doubleRoom.displayRoomDetails();
+            System.out.println("Available: " + availability.get("Double") + "\n");
+        }
+
+        if (availability.get("Suite") > 0) {
+            System.out.println("Suite Room:");
+            suiteRoom.displayRoomDetails();
+            System.out.println("Available: " + availability.get("Suite"));
+        }
     }
 }
