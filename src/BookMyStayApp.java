@@ -105,6 +105,31 @@ public class BookMyStayApp {
         }
 
         System.out.println("\nUC9 grouping completed...");
+
+
+        // ===================== UC10 =====================
+        System.out.println("\n===============================");
+        System.out.println("UC10 - Count Total Seats in Train");
+        System.out.println("===============================\n");
+
+        List<Bogie> bogies2 = new ArrayList<>();
+
+        bogies2.add(new Bogie("Sleeper", 72));
+        bogies2.add(new Bogie("AC Chair", 56));
+        bogies2.add(new Bogie("First Class", 24));
+        bogies2.add(new Bogie("Sleeper", 70));
+
+        System.out.println("Bogies in Train:");
+        for (Bogie b : bogies2) {
+            System.out.println(b.name + " -> " + b.capacity);
+        }
+
+        int totalSeats = bogies2.stream()
+                .map(b -> b.capacity)
+                .reduce(0, Integer::sum);
+
+        System.out.println("\nTotal Seating Capacity of Train: " + totalSeats);
+        System.out.println("\nUC10 aggregation completed...");
     }
 }
 
@@ -288,7 +313,7 @@ class BookingReportService {
 }
 
 
-// ===================== UC9 =====================
+// ===================== UC9 & UC10 =====================
 
 class Bogie {
     String name;
