@@ -1,5 +1,5 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
+
 
 public class BookMyStayApp {
     public static void main(String[] args) {
@@ -61,6 +61,23 @@ public class BookMyStayApp {
         System.out.println("Room Search\n");
         searchService.searchAvailableRooms(inventory, single, dbl, suite);
         // ===================== UC4 END =======================
+
+
+        // ===================== UC5 START =====================
+        BookingRequestQueue queue = new BookingRequestQueue();
+
+        queue.addRequest(new Reservation("Abhi", "Single"));
+        queue.addRequest(new Reservation("Subha", "Double"));
+        queue.addRequest(new Reservation("Vanmathi", "Suite"));
+
+        System.out.println("\nBooking Request Queue");
+
+        while (queue.hasPendingRequests()) {
+            Reservation r = queue.getNextRequest();
+            System.out.println("Processing booking for Guest: " 
+                + r.getGuestName() + ", Room Type: " + r.getRoomType());
+        }
+        // ===================== UC5 END =======================
     }
 }
 
@@ -156,7 +173,48 @@ class RoomSearchService {
         if (availability.get("Suite") > 0) {
             System.out.println("Suite Room:");
             suiteRoom.displayRoomDetails();
-            System.out.println("Available: " + availability.get("Suite"));
+            System.out.println("Available: " + availability.get("Suite") + "\n");
         }
+    }
+}
+
+
+// ===================== UC5 CLASSES =====================
+
+class Reservation {
+    private String guestName;
+    private String roomType;
+
+    public Reservation(String guestName, String roomType) {
+        this.guestName = guestName;
+        this.roomType = roomType;
+    }
+
+    public String getGuestName() {
+        return guestName;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+}
+
+class BookingRequestQueue {
+    private Queue<Reservation> requestQueue;
+
+    public BookingRequestQueue() {
+        requestQueue = new LinkedList<>();
+    }
+
+    public void addRequest(Reservation reservation) {
+        requestQueue.offer(reservation);
+    }
+
+    public Reservation getNextRequest() {
+        return requestQueue.poll();
+    }
+
+    public boolean hasPendingRequests() {
+        return !requestQueue.isEmpty();
     }
 }
