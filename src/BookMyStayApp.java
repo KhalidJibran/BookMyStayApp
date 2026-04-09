@@ -1,4 +1,5 @@
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class BookMyStayApp {
     public static void main(String[] args) {
@@ -37,11 +38,14 @@ public class BookMyStayApp {
 
         System.out.println("\nRoom Allocation Processing");
 
+        List<String> reservationIds = new ArrayList<>();
+
         while (queue.hasPendingRequests()) {
             Reservation r = queue.getNextRequest();
             String id = allocator.allocateRoom(r, inventory);
             if (id != null) {
                 history.addReservation(r);
+                reservationIds.add(id);
             }
         }
 
@@ -49,14 +53,18 @@ public class BookMyStayApp {
         // ===================== UC7 =====================
         AddOnServiceManager serviceManager = new AddOnServiceManager();
 
-        serviceManager.addService("Single-1", new AddOnService("Breakfast", 500));
-        serviceManager.addService("Single-1", new AddOnService("Spa", 1000));
+        if (!reservationIds.isEmpty()) {
+            String resId = reservationIds.get(0);
 
-        double cost = serviceManager.calculateTotalServiceCost("Single-1");
+            serviceManager.addService(resId, new AddOnService("Breakfast", 500));
+            serviceManager.addService(resId, new AddOnService("Spa", 1000));
 
-        System.out.println("\nAdd-On Service Selection");
-        System.out.println("Reservation ID: Single-1");
-        System.out.println("Total Add-On Cost: " + cost);
+            double total = serviceManager.calculateTotalServiceCost(resId);
+
+            System.out.println("\nAdd-On Service Selection");
+            System.out.println("Reservation ID: " + resId);
+            System.out.println("Total Add-On Cost: " + total);
+        }
 
 
         // ===================== UC8 =====================
@@ -64,6 +72,39 @@ public class BookMyStayApp {
 
         System.out.println("\nBooking History and Reporting\n");
         report.generateReport(history);
+
+
+        // ===================== UC9 =====================
+        System.out.println("\n===============================");
+        System.out.println("UC9 - Group Bogies by Type");
+        System.out.println("===============================\n");
+
+        List<Bogie> bogies = new ArrayList<>();
+
+        bogies.add(new Bogie("Sleeper", 72));
+        bogies.add(new Bogie("AC Chair", 56));
+        bogies.add(new Bogie("First Class", 24));
+        bogies.add(new Bogie("Sleeper", 70));
+        bogies.add(new Bogie("AC Chair", 60));
+
+        System.out.println("All Bogies:");
+        for (Bogie b : bogies) {
+            System.out.println(b.name + " -> " + b.capacity);
+        }
+
+        Map<String, List<Bogie>> grouped =
+                bogies.stream()
+                      .collect(Collectors.groupingBy(b -> b.name));
+
+        System.out.println("\nGrouped Bogies:");
+        for (Map.Entry<String, List<Bogie>> entry : grouped.entrySet()) {
+            System.out.println("\nBogie Type: " + entry.getKey());
+            for (Bogie b : entry.getValue()) {
+                System.out.println("Capacity -> " + b.capacity);
+            }
+        }
+
+        System.out.println("\nUC9 grouping completed...");
     }
 }
 
@@ -243,5 +284,18 @@ class BookingReportService {
         for (Reservation r : h.getConfirmedReservations()) {
             System.out.println("Guest: " + r.getGuestName() + ", Room Type: " + r.getRoomType());
         }
+    }
+}
+
+
+// ===================== UC9 =====================
+
+class Bogie {
+    String name;
+    int capacity;
+
+    public Bogie(String name, int capacity) {
+        this.name = name;
+        this.capacity = capacity;
     }
 }
