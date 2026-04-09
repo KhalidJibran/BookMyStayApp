@@ -1,9 +1,16 @@
-public class BookMyStayApp {
-     public static void main(String[] args) {
-        System.out.println("Welcome to the Hotel Booking Management System");
-        System.out.println("System initialized successfully.");
+import java.util.HashMap;
+import java.util.Map;
 
-  // ===================== UC2 START =====================
+public class BookMyStayApp {
+    public static void main(String[] args) {
+
+        // ===================== UC1 START =====================
+        System.out.println("Welcome to the Hotel Booking Management System");
+        System.out.println("System initialized successfully.\n");
+        // ===================== UC1 END =======================
+
+
+        // ===================== UC2 START =====================
         Room single = new SingleRoom();
         Room dbl = new DoubleRoom();
         Room suite = new SuiteRoom();
@@ -24,13 +31,33 @@ public class BookMyStayApp {
 
         System.out.println("Suite Room:");
         suite.displayRoomDetails();
-        System.out.println("Available: " + suiteAvailable);
+        System.out.println("Available: " + suiteAvailable + "\n");
         // ===================== UC2 END =======================
+
+
+        // ===================== UC3 START =====================
+        RoomInventory inventory = new RoomInventory();
+        Map<String, Integer> availability = inventory.getRoomAvailability();
+
+        System.out.println("Hotel Room Inventory Status\n");
+
+        System.out.println("Single Room:");
+        single.displayRoomDetails();
+        System.out.println("Available Rooms: " + availability.get("Single") + "\n");
+
+        System.out.println("Double Room:");
+        dbl.displayRoomDetails();
+        System.out.println("Available Rooms: " + availability.get("Double") + "\n");
+
+        System.out.println("Suite Room:");
+        suite.displayRoomDetails();
+        System.out.println("Available Rooms: " + availability.get("Suite"));
+        // ===================== UC3 END =======================
     }
 }
 
 
-// ===================== UC2 CLASSES START =====================
+// ===================== SHARED CLASSES =====================
 
 abstract class Room {
     protected int numberOfBeds;
@@ -67,5 +94,29 @@ class SuiteRoom extends Room {
         super(3, 750, 5000.0);
     }
 }
-    
 
+
+// ===================== UC3 CLASS =====================
+
+class RoomInventory {
+    private Map<String, Integer> roomAvailability;
+
+    public RoomInventory() {
+        roomAvailability = new HashMap<>();
+        initializeInventory();
+    }
+
+    private void initializeInventory() {
+        roomAvailability.put("Single", 5);
+        roomAvailability.put("Double", 3);
+        roomAvailability.put("Suite", 2);
+    }
+
+    public Map<String, Integer> getRoomAvailability() {
+        return roomAvailability;
+    }
+
+    public void updateAvailability(String roomType, int count) {
+        roomAvailability.put(roomType, count);
+    }
+}
