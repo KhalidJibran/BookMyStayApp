@@ -1,5 +1,6 @@
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.regex.*;
 
 public class BookMyStayApp {
     public static void main(String[] args) {
@@ -75,61 +76,58 @@ public class BookMyStayApp {
 
 
         // ===================== UC9 =====================
-        System.out.println("\n===============================");
-        System.out.println("UC9 - Group Bogies by Type");
-        System.out.println("===============================\n");
+        System.out.println("\nUC9 - Group Bogies\n");
 
         List<Bogie> bogies = new ArrayList<>();
-
         bogies.add(new Bogie("Sleeper", 72));
         bogies.add(new Bogie("AC Chair", 56));
         bogies.add(new Bogie("First Class", 24));
         bogies.add(new Bogie("Sleeper", 70));
-        bogies.add(new Bogie("AC Chair", 60));
-
-        System.out.println("All Bogies:");
-        for (Bogie b : bogies) {
-            System.out.println(b.name + " -> " + b.capacity);
-        }
 
         Map<String, List<Bogie>> grouped =
                 bogies.stream()
                       .collect(Collectors.groupingBy(b -> b.name));
 
-        System.out.println("\nGrouped Bogies:");
-        for (Map.Entry<String, List<Bogie>> entry : grouped.entrySet()) {
-            System.out.println("\nBogie Type: " + entry.getKey());
-            for (Bogie b : entry.getValue()) {
-                System.out.println("Capacity -> " + b.capacity);
-            }
+        for (String key : grouped.keySet()) {
+            System.out.println(key + " -> " + grouped.get(key).size());
         }
-
-        System.out.println("\nUC9 grouping completed...");
 
 
         // ===================== UC10 =====================
-        System.out.println("\n===============================");
-        System.out.println("UC10 - Count Total Seats in Train");
-        System.out.println("===============================\n");
+        System.out.println("\nUC10 - Total Seats\n");
 
-        List<Bogie> bogies2 = new ArrayList<>();
-
-        bogies2.add(new Bogie("Sleeper", 72));
-        bogies2.add(new Bogie("AC Chair", 56));
-        bogies2.add(new Bogie("First Class", 24));
-        bogies2.add(new Bogie("Sleeper", 70));
-
-        System.out.println("Bogies in Train:");
-        for (Bogie b : bogies2) {
-            System.out.println(b.name + " -> " + b.capacity);
-        }
-
-        int totalSeats = bogies2.stream()
+        int totalSeats = bogies.stream()
                 .map(b -> b.capacity)
                 .reduce(0, Integer::sum);
 
-        System.out.println("\nTotal Seating Capacity of Train: " + totalSeats);
-        System.out.println("\nUC10 aggregation completed...");
+        System.out.println("Total Seats: " + totalSeats);
+
+
+        // ===================== UC11 =====================
+        System.out.println("\nUC11 - Regex Validation\n");
+
+        Scanner sc = new Scanner(System.in);
+
+        System.out.print("Enter Train ID (Format: TRN-1234): ");
+        String trainId = sc.nextLine();
+
+        System.out.print("Enter Cargo Code (Format: PET-AB): ");
+        String cargoCode = sc.nextLine();
+
+        Pattern trainPattern = Pattern.compile("TRN-\\d{4}");
+        Pattern cargoPattern = Pattern.compile("PET-[A-Z]{2}");
+
+        Matcher trainMatcher = trainPattern.matcher(trainId);
+        Matcher cargoMatcher = cargoPattern.matcher(cargoCode);
+
+        boolean isTrainValid = trainMatcher.matches();
+        boolean isCargoValid = cargoMatcher.matches();
+
+        System.out.println("\nValidation Results:");
+        System.out.println("Train ID Valid: " + isTrainValid);
+        System.out.println("Cargo Code Valid: " + isCargoValid);
+
+        System.out.println("\nUC11 validation completed...");
     }
 }
 
@@ -234,24 +232,19 @@ class BookingRequestQueue {
 // ===================== UC6 =====================
 
 class RoomAllocationService {
-    private Set<String> set = new HashSet<>();
     private Map<String, Integer> count = new HashMap<>();
 
     public String allocateRoom(Reservation r, RoomInventory inv) {
         String t = r.getRoomType();
         Map<String, Integer> m = inv.getRoomAvailability();
 
-        if (m.get(t) <= 0) {
-            System.out.println("No rooms available for " + t);
-            return null;
-        }
+        if (m.get(t) <= 0) return null;
 
         int c = count.getOrDefault(t, 0) + 1;
         count.put(t, c);
 
         String id = t + "-" + c;
 
-        set.add(id);
         inv.updateAvailability(t, m.get(t) - 1);
 
         System.out.println("Booking confirmed for Guest: " + r.getGuestName() + ", Room ID: " + id);
@@ -263,11 +256,9 @@ class RoomAllocationService {
 // ===================== UC7 =====================
 
 class AddOnService {
-    private String name;
     private double cost;
 
     public AddOnService(String n, double c) {
-        name = n;
         cost = c;
     }
 
