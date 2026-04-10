@@ -37,11 +37,14 @@ public class BookMyStayApp {
 
         System.out.println("\nRoom Allocation Processing");
 
+        List<String> reservationIds = new ArrayList<>();
+
         while (queue.hasPendingRequests()) {
             Reservation r = queue.getNextRequest();
             String id = allocator.allocateRoom(r, inventory);
             if (id != null) {
                 history.addReservation(r);
+                reservationIds.add(id);
             }
         }
 
@@ -49,14 +52,18 @@ public class BookMyStayApp {
         // ===================== UC7 =====================
         AddOnServiceManager serviceManager = new AddOnServiceManager();
 
-        serviceManager.addService("Single-1", new AddOnService("Breakfast", 500));
-        serviceManager.addService("Single-1", new AddOnService("Spa", 1000));
+        if (!reservationIds.isEmpty()) {
+            String resId = reservationIds.get(0);
 
-        double cost = serviceManager.calculateTotalServiceCost("Single-1");
+            serviceManager.addService(resId, new AddOnService("Breakfast", 500));
+            serviceManager.addService(resId, new AddOnService("Spa", 1000));
 
-        System.out.println("\nAdd-On Service Selection");
-        System.out.println("Reservation ID: Single-1");
-        System.out.println("Total Add-On Cost: " + cost);
+            double total = serviceManager.calculateTotalServiceCost(resId);
+
+            System.out.println("\nAdd-On Service Selection");
+            System.out.println("Reservation ID: " + resId);
+            System.out.println("Total Add-On Cost: " + total);
+        }
 
 
         // ===================== UC8 =====================
@@ -64,6 +71,34 @@ public class BookMyStayApp {
 
         System.out.println("\nBooking History and Reporting\n");
         report.generateReport(history);
+
+
+        // ===================== UC9 START =====================
+        System.out.println("\nBooking Validation\n");
+
+        Scanner scanner = new Scanner(System.in);
+
+        System.out.print("Enter guest name: ");
+        String guestName = scanner.nextLine();
+
+        System.out.print("Enter room type (Single/Double/Suite): ");
+        String roomType = scanner.nextLine();
+
+        ReservationValidator validator = new ReservationValidator();
+        BookingRequestQueue bookingQueue = new BookingRequestQueue();
+
+        try {
+            validator.validate(guestName, roomType, inventory);
+
+            bookingQueue.addRequest(new Reservation(guestName, roomType));
+            System.out.println("Booking request added successfully!");
+
+        } catch (InvalidBookingException e) {
+            System.out.println("Booking failed: " + e.getMessage());
+        } finally {
+            scanner.close();
+        }
+        // ===================== UC9 END =====================
     }
 }
 
@@ -168,24 +203,18 @@ class BookingRequestQueue {
 // ===================== UC6 =====================
 
 class RoomAllocationService {
-    private Set<String> set = new HashSet<>();
     private Map<String, Integer> count = new HashMap<>();
 
     public String allocateRoom(Reservation r, RoomInventory inv) {
         String t = r.getRoomType();
         Map<String, Integer> m = inv.getRoomAvailability();
 
-        if (m.get(t) <= 0) {
-            System.out.println("No rooms available for " + t);
-            return null;
-        }
+        if (!m.containsKey(t) || m.get(t) <= 0) return null;
 
         int c = count.getOrDefault(t, 0) + 1;
         count.put(t, c);
 
         String id = t + "-" + c;
-
-        set.add(id);
         inv.updateAvailability(t, m.get(t) - 1);
 
         System.out.println("Booking confirmed for Guest: " + r.getGuestName() + ", Room ID: " + id);
@@ -197,14 +226,9 @@ class RoomAllocationService {
 // ===================== UC7 =====================
 
 class AddOnService {
-    private String name;
     private double cost;
 
-    public AddOnService(String n, double c) {
-        name = n;
-        cost = c;
-    }
-
+    public AddOnService(String n, double c) { cost = c; }
     public double getCost() { return cost; }
 }
 
@@ -219,9 +243,7 @@ class AddOnServiceManager {
     public double calculateTotalServiceCost(String id) {
         double total = 0;
         if (map.containsKey(id)) {
-            for (AddOnService s : map.get(id)) {
-                total += s.getCost();
-            }
+            for (AddOnService s : map.get(id)) total += s.getCost();
         }
         return total;
     }
@@ -242,6 +264,34 @@ class BookingReportService {
         System.out.println("Booking History Report\n");
         for (Reservation r : h.getConfirmedReservations()) {
             System.out.println("Guest: " + r.getGuestName() + ", Room Type: " + r.getRoomType());
+        }
+    }
+}
+
+
+// ===================== UC9 =====================
+
+class InvalidBookingException extends Exception {
+    public InvalidBookingException(String message) {
+        super(message);
+    }
+}
+
+class ReservationValidator {
+
+    public void validate(String guestName, String roomType, RoomInventory inventory)
+            throws InvalidBookingException {
+
+        if (guestName == null || guestName.trim().isEmpty()) {
+            throw new InvalidBookingException("Guest name cannot be empty.");
+        }
+
+        if (!inventory.getRoomAvailability().containsKey(roomType)) {
+            throw new InvalidBookingException("Invalid room type selected.");
+        }
+
+        if (inventory.getRoomAvailability().get(roomType) <= 0) {
+            throw new InvalidBookingException("No rooms available for selected type.");
         }
     }
 }
