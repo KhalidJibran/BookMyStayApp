@@ -7,24 +7,29 @@ public class BookMyStayApp {
         System.out.println("Welcome to the Hotel Booking Management System");
         System.out.println("System initialized successfully.\n");
 
+
         // ===================== UC2 =====================
         Room single = new SingleRoom();
         Room dbl = new DoubleRoom();
         Room suite = new SuiteRoom();
 
+
         // ===================== UC3 =====================
         RoomInventory inventory = new RoomInventory();
+
 
         // ===================== UC4 =====================
         RoomSearchService search = new RoomSearchService();
         System.out.println("Room Search\n");
         search.searchAvailableRooms(inventory, single, dbl, suite);
 
+
         // ===================== UC5 =====================
         BookingRequestQueue queue = new BookingRequestQueue();
         queue.addRequest(new Reservation("Abhi", "Single"));
         queue.addRequest(new Reservation("Subha", "Double"));
         queue.addRequest(new Reservation("Vanmathi", "Suite"));
+
 
         // ===================== UC6 =====================
         RoomAllocationService allocator = new RoomAllocationService();
@@ -43,10 +48,13 @@ public class BookMyStayApp {
             }
         }
 
+
         // ===================== UC7 =====================
         AddOnServiceManager serviceManager = new AddOnServiceManager();
+
         if (!reservationIds.isEmpty()) {
             String resId = reservationIds.get(0);
+
             serviceManager.addService(resId, new AddOnService("Breakfast", 500));
             serviceManager.addService(resId, new AddOnService("Spa", 1000));
 
@@ -56,13 +64,17 @@ public class BookMyStayApp {
                     serviceManager.calculateTotalServiceCost(resId));
         }
 
+
         // ===================== UC8 =====================
         BookingReportService report = new BookingReportService();
+
         System.out.println("\nBooking History and Reporting\n");
         report.generateReport(history);
 
+
         // ===================== UC9 =====================
         System.out.println("\nBooking Validation\n");
+
         Scanner scanner = new Scanner(System.in);
 
         System.out.print("Enter guest name: ");
@@ -80,6 +92,7 @@ public class BookMyStayApp {
             System.out.println("Booking failed: " + e.getMessage());
         }
 
+
         // ===================== UC10 =====================
         System.out.println("\nBooking Cancellation\n");
 
@@ -96,7 +109,8 @@ public class BookMyStayApp {
                     + inventory.getRoomAvailability().get("Single"));
         }
 
-        // ===================== UC11 START =====================
+
+        // ===================== UC11 =====================
         System.out.println("\nConcurrent Booking Simulation\n");
 
         BookingRequestQueue concurrentQueue = new BookingRequestQueue();
@@ -131,7 +145,22 @@ public class BookMyStayApp {
         for (String key : sharedInventory.getRoomAvailability().keySet()) {
             System.out.println(key + ": " + sharedInventory.getRoomAvailability().get(key));
         }
-        // ===================== UC11 END =====================
+
+
+        // ===================== UC12 =====================
+        System.out.println("\nSystem Recovery\n");
+
+        FilePersistenceService persistence = new FilePersistenceService();
+        String filePath = "inventory.txt";
+
+        persistence.loadInventory(inventory, filePath);
+
+        System.out.println("\nCurrent Inventory:");
+        for (String key : inventory.getRoomAvailability().keySet()) {
+            System.out.println(key + ": " + inventory.getRoomAvailability().get(key));
+        }
+
+        persistence.saveInventory(inventory, filePath);
 
         scanner.close();
     }
@@ -218,9 +247,7 @@ class BookingRequestQueue {
     private Queue<Reservation> q = new LinkedList<>();
 
     public void addRequest(Reservation r) { q.offer(r); }
-
     public Reservation getNextRequest() { return q.poll(); }
-
     public boolean hasPendingRequests() { return !q.isEmpty(); }
 }
 
@@ -376,6 +403,57 @@ class ConcurrentBookingProcessor implements Runnable {
             synchronized (inventory) {
                 allocationService.allocateRoom(reservation, inventory);
             }
+        }
+    }
+}
+
+
+// ===================== UC12 =====================
+class FilePersistenceService {
+
+    public void saveInventory(RoomInventory inventory, String filePath) {
+        try {
+            java.io.PrintWriter writer = new java.io.PrintWriter(filePath);
+
+            for (Map.Entry<String, Integer> entry :
+                    inventory.getRoomAvailability().entrySet()) {
+
+                writer.println(entry.getKey() + "=" + entry.getValue());
+            }
+
+            writer.close();
+            System.out.println("Inventory saved successfully.");
+
+        } catch (Exception e) {
+            System.out.println("Error saving inventory.");
+        }
+    }
+
+    public void loadInventory(RoomInventory inventory, String filePath) {
+        try {
+            java.io.File file = new java.io.File(filePath);
+
+            if (!file.exists()) {
+                System.out.println("No valid inventory data found. Starting fresh.");
+                return;
+            }
+
+            Scanner sc = new Scanner(file);
+
+            while (sc.hasNextLine()) {
+                String line = sc.nextLine();
+                String[] parts = line.split("=");
+
+                if (parts.length == 2) {
+                    inventory.updateAvailability(parts[0], Integer.parseInt(parts[1]));
+                }
+            }
+
+            sc.close();
+            System.out.println("Inventory loaded successfully.");
+
+        } catch (Exception e) {
+            System.out.println("Error loading inventory.");
         }
     }
 }
